@@ -1,8 +1,7 @@
 #include "System.cpp"
-
+#include "Mesh.h"
 
 int main() {
-
 	System system;
 
 	if ( system.GLFWInit() != 0 ){
