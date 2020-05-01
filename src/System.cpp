@@ -78,9 +78,9 @@ int System::OpenGLSetup()
 
 	glEnable( GL_DEPTH_TEST );
 
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-	glFrontFace( GL_CW );
+//	glEnable( GL_CULL_FACE );
+//	glCullFace( GL_BACK );
+//	glFrontFace( GL_CW );
 
 	return EXIT_SUCCESS;
 }
@@ -88,7 +88,6 @@ int System::OpenGLSetup()
 int System::SystemSetup()
 {
 	coreShader = Shader( "resources/shaders/core/core.vert", "resources/shaders/core/core.frag" );
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(this->WIDTH), static_cast<GLfloat>(this->HEIGHT), 0.0f, -1.0f, 1.0f);
     coreShader.Use();
 
 	return EXIT_SUCCESS;
@@ -99,34 +98,43 @@ void System::Run()
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
-
     coreShader.Use();
-	coreShader.LoadTexture( "resources/textures/woodTexture.jpg", "texture1", "woodTexture" );
     coreShader.LoadTexture( "resources/textures/bricks.jpg", "texture1", "bricksTexture" );
 
-
     Obj3D *cube = obj3DReader->readObjFromFile("/Users/i848340/unisinos/compgraf/resources/objects/cubo.obj");
-    cube->scale = 0.5f;
-    cube->rotate = 0.0f;
-    cube->translate = new glm::vec3(5.0f, 5.0f, -15.0f);
+    cube->destroyed = true;
     objects.push_back(cube);
 
     Obj3D *sphere = obj3DReader->readObjFromFile("/Users/i848340/unisinos/compgraf/resources/objects/sphere.obj");
     sphere->scale = 0.5f;
-    sphere->rotate = 0.0f;
-    sphere->translate = new glm::vec3(0.0f, 0.0f, -15.0f);
+    sphere->position = new glm::vec3(-8.0f, -5.0f, -15.0f);
     objects.push_back(sphere);
 
-    Obj3D *objtest = new Obj3D();
-    objtest->mesh = cube->mesh;
-    objtest->scale = 0.5f;
-    objtest->rotate = 0.0f;
-    objtest->translate = new glm::vec3(15.0f, 0.0f, -15.0f);
-    objects.push_back(objtest);
+    Obj3D *obj1 = new Obj3D();
+    obj1->mesh = sphere->mesh;
+    obj1->min = sphere->min;
+    obj1->max = sphere->max;
+    obj1->scale = 0.5f;
+    obj1->canBeDestroyed = false;
+    obj1->position = new glm::vec3(0.0f, -5.0f, -15.0f);
+    objects.push_back(obj1);
 
-    std::vector<float> verticesVector;
-    std::vector<float> texturesVector;
-    std::vector<float> normalsVector;
+    Obj3D *obj2 = new Obj3D();
+    obj2->mesh = sphere->mesh;
+    obj2->min = sphere->min;
+    obj2->max = sphere->max;
+    obj2->scale = 0.5f;
+    obj2->position = new glm::vec3(8.0f, -5.0f, -15.0f);
+    objects.push_back(obj2);
+
+    Obj3D *obj3 = new Obj3D();
+    obj3->mesh = sphere->mesh;
+    obj3->min = sphere->min;
+    obj3->max = sphere->max;
+    obj3->scale = 0.5f;
+    obj3->canBeDestroyed = false;
+    obj3->position = new glm::vec3(16.0f, -5.0f, -15.0f);
+    objects.push_back(obj3);
 
     std::vector<float> finalVector;
 
@@ -143,10 +151,6 @@ void System::Run()
             group = mesh->groups[i];
             for (int j = 0; j < group->faces.size(); ++j) {
                 face = group->faces[j];
-
-                std::cout << "\n Vertex ID = " << j;
-                std::cout << "\n Vertex count = " << face->verticesCount();
-
 
                 for (int k = 0; k < face->verticesCount(); ++k) {
                     vertex = mesh->vertices[face->vertices[k]];
@@ -218,6 +222,11 @@ void System::Run()
             camera->processKeyboardInput(BACKWARD,deltaTime);
         }
 
+        if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+            shoot(obj3);
+        }
+
+
 #pragma endregion
 
 		glClearColor( 0.2f, 0.3f, 0.8f, 1.0f );
@@ -228,6 +237,11 @@ void System::Run()
 		coreShader.UseTexture( "bricksTexture" );
 
         for (int i = 0; i < objects.size(); ++i) {
+            if (objects[i]->isProjectile){
+                moveBullet(objects[i], deltaTime);
+                processCollisions(i);
+            }
+
             objects[i]->draw(camera, &coreShader);
         }
 
@@ -235,10 +249,55 @@ void System::Run()
 	}
 }
 
+void System::shoot(Obj3D *modelObject) {
+    Obj3D *bullet = new Obj3D();
+    bullet->mesh = modelObject->mesh;
+    bullet->min = modelObject->min;
+    bullet->max = modelObject->max;
+    bullet->isProjectile = true;
+    bullet->destroyed = false;
+    bullet->scale = 0.01f;
+    bullet->direction = new glm::vec3(camera->front);
+    bullet->position = new glm::vec3(camera->position + camera->front);
+    objects.push_back(bullet);
+}
+
+void System::moveBullet(Obj3D *bullet, float deltaTime) {
+    bullet->position->x = bullet->position->x + (deltaTime * 5 * bullet->direction->x);
+    bullet->position->y = bullet->position->y + (deltaTime * 5 * bullet->direction->y);
+    bullet->position->z = bullet->position->z + (deltaTime * 5 * bullet->direction->z);
+}
+
+void System::reflectBullet(Obj3D *bullet) {
+    if (bullet->reflected)
+        return;
+
+    glm::vec3 reflection = glm::cross(*bullet->direction, camera->calculateUp());
+    bullet->direction = &reflection;
+    bullet->reflected = true;
+}
+
+void System::processCollisions(int i) {
+    for (int j = 0; j < objects.size(); ++j) {
+        if (!objects[j]->isProjectile){
+            if(objects[i]->testCollision(objects[j]))
+            {
+                if (objects[j]->canBeDestroyed){
+                    objects[j]->destroyed = true;
+                } else {
+                    reflectBullet(objects[i]);
+                }
+            };
+        }
+    }
+}
+
 void System::Finish()
 {
 	coreShader.Delete();
 	glfwTerminate();
 }
+
+
 
 

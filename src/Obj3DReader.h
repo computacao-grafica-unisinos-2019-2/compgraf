@@ -38,6 +38,7 @@ public:
             if(firstToken == "v"){
                 float x, y, z;
                 sline >> x >> y >> z;
+                calculateBoundingBox(obj3D, x, y, z, count);
                 mesh->vertices.push_back(new glm::vec3(x,y,z));
             } else if(firstToken == "vn"){
                 float x, y, z;
@@ -60,7 +61,7 @@ public:
 
 private:
 
-    void processTriplet(Face *face, std::string token){
+    void processTriplet(Face *face, std::string token, Group *group){
         std::stringstream stoken(token);
         std::string aux;
 
@@ -78,22 +79,43 @@ private:
         if(!aux.empty()) {
             face->normals.push_back(stoi(aux) - 1);
         }
+
+        group->numOfVertices++;
+    }
+
+    void calculateBoundingBox(Obj3D *obj3D, int x, int y, int z, int count){
+        if (count == 1){
+            obj3D->max.x = x;
+            obj3D->max.y = y;
+            obj3D->max.z = z;
+            obj3D->min.x = x;
+            obj3D->min.y = y;
+            obj3D->min.z = z;
+        }
+        if(x > obj3D->max.x)
+            obj3D->max.x = x;
+        if(y > obj3D->max.y)
+            obj3D->max.y = y;
+        if(z > obj3D->max.z)
+            obj3D->max.z = z;
+        if(x < obj3D->min.x)
+            obj3D->min.x = x;
+        if(y < obj3D->min.y)
+            obj3D->min.y = y;
+        if(z < obj3D->min.z)
+            obj3D->min.z = z;
     }
 
     void processFLine(std::stringstream &sline, Group *group){
         Face *face = new Face();
         std::string first, second, third, fourth, token;
+
         sline >> first;
-        processTriplet(face, first);
-        group->numOfVertices++;
-
+        processTriplet(face, first, group);
         sline >> second;
-        processTriplet(face, second);
-        group->numOfVertices++;
-
+        processTriplet(face, second, group);
         sline >> third;
-        processTriplet(face, third);
-        group->numOfVertices++;
+        processTriplet(face, third, group);
 
         sline >> fourth;
         if (!fourth.empty()){

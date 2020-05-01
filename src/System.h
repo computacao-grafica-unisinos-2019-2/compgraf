@@ -54,6 +54,17 @@ public:
 
 	void Finish();
 
+    void reflectBullet();
+
+    void reflectBullet(Obj3D *bullet);
+
+    void processCollisions(int i);
+
+    void shoot(Obj3D *modelObject);
+
+    void moveBullet(Obj3D *bullet);
+
+    void moveBullet(Obj3D *bullet, float deltaTime);
 };
 
 #endif

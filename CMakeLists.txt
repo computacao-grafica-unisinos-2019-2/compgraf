@@ -49,6 +49,7 @@ configure_file(${TEXTURES_PATH}/brickTexture.jpg ${TARGET_TEXTURES}/brickTexture
 configure_file(${TEXTURES_PATH}/stoneTexture.jpg ${TARGET_TEXTURES}/stoneTexture.jpg COPYONLY)
 configure_file(${TEXTURES_PATH}/woodTexture.jpg ${TARGET_TEXTURES}/woodTexture.jpg COPYONLY)
 configure_file(${TEXTURES_PATH}/table_texture.png ${TARGET_TEXTURES}/table_texture.png COPYONLY)
+configure_file(${TEXTURES_PATH}/wood1.jpg ${TARGET_TEXTURES}/wood1.jpg COPYONLY)
 
 configure_file(${TEXTURES_PATH}/bricks.jpg ${TARGET_TEXTURES}/bricks.jpg COPYONLY)
 

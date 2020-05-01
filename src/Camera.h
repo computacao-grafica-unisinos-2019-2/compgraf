@@ -24,11 +24,6 @@ public:
     float speed         =  2.5f;
     float sensitivity   =  0.1f;
     float fieldOfView   =  45.0f;
-    float lastX = WIDTH / 2.0f;
-    float lastY = HEIGHT / 2.0f;
-    bool firstMouse = true;
-
-
 
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -86,6 +81,10 @@ public:
         updateCameraVectors();
     }
 
+    glm::vec3 calculateUp(){
+        return glm::normalize(glm::cross(right, front));
+    }
+
 private:
     void updateCameraVectors(){
         glm::vec3 front;
@@ -101,9 +100,7 @@ private:
         return glm::normalize(glm::cross(front, up));
     }
 
-    glm::vec3 calculateUp(){
-        return glm::normalize(glm::cross(right, front));
-    }
+
 };
 
 

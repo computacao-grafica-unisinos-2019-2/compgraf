@@ -21,21 +21,6 @@ public:
     std::vector<glm::vec3*> vertices;
     std::vector<glm::vec3*> normals;
 
-    int addNormal(glm::vec3 *normal){
-        normals.push_back(normal);
-        return normals.size() - 1;
-    };
-
-    int addVertex(glm::vec3 *vertex){
-        vertices.push_back(vertex);
-        return vertices.size() - 1;
-    };
-
-    int addMapping(glm::vec2 *mapping){
-        mappings.push_back(mapping);
-        return mappings.size() - 1;
-    };
-
     int addGroup(Group *group){
         groups.push_back(group);
         return groups.size() - 1;
